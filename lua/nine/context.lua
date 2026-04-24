@@ -1,5 +1,7 @@
 local M = {}
 
+local cursor_namespace = vim.api.nvim_create_namespace("nine_cursor")
+
 local function relative_path(bufnr)
   local name = vim.api.nvim_buf_get_name(bufnr)
   if name == "" then
@@ -25,10 +27,16 @@ function M.capture()
   local end_row = math.min(vim.api.nvim_buf_line_count(bufnr), row + 21)
   local context_lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row, false)
 
+  local mark_id = vim.api.nvim_buf_set_extmark(bufnr, cursor_namespace, row, col, {
+    right_gravity = true,
+  })
+
   return {
     bufnr = bufnr,
     row = row,
     col = col,
+    mark_namespace = cursor_namespace,
+    mark_id = mark_id,
     filetype = vim.bo[bufnr].filetype,
     path = relative_path(bufnr),
     before_cursor = before_cursor,
