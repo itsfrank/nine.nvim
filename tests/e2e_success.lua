@@ -1,33 +1,32 @@
-vim.opt.runtimepath:append(vim.fn.getcwd())
-require("plugin/nine")
-
+local fw = require("tests.framework")
 local t = require("tests.test_utils")
-local log = t.log_file("success")
 
-t.reset_log(log)
-vim.env.NINE_FAKE_PI_SCENARIO = "success"
-vim.env.NINE_FAKE_PI_LOG = log
+fw.test("inserts text and supports single undo", function()
+  local log = t.log_file("success")
 
-t.setup_nine({
-  pi_cmd = "node",
-  pi_args = { t.fake_pi_script() },
-})
+  t.reset_log(log)
+  vim.env.NINE_FAKE_PI_SCENARIO = "success"
+  vim.env.NINE_FAKE_PI_LOG = log
 
-local bufnr = t.set_buffer({ "abc" }, { 1, 1 })
-t.open_nine()
-t.submit_prompt("insert something here")
+  t.setup_nine({
+    pi_cmd = "node",
+    pi_args = { t.fake_pi_script() },
+  })
 
-t.wait_until(function()
-  return table.concat(t.current_lines(bufnr), "\n") == "aHELLObc"
-end, 4000, "expected insertion to be applied")
+  local bufnr = t.set_buffer({ "abc" }, { 1, 1 })
+  t.open_nine()
+  t.submit_prompt("insert something here")
 
-local cursor = vim.api.nvim_win_get_cursor(0)
-assert(cursor[1] == 1 and cursor[2] == 6, "cursor did not move to end of inserted text")
+  t.wait_until(function()
+    return table.concat(t.current_lines(bufnr), "\n") == "aHELLObc"
+  end, 4000, "expected insertion to be applied")
 
-vim.cmd("undo")
-assert(table.concat(t.current_lines(bufnr), "\n") == "abc", "expected one undo to revert insertion")
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  fw.eq(cursor, { 1, 6 }, "cursor should move to end of inserted text")
 
-local lines = t.read_lines(log)
-assert(#lines == 1, "expected one prompt attempt")
+  vim.cmd("silent undo")
+  fw.eq(table.concat(t.current_lines(bufnr), "\n"), "abc", "one undo should revert insertion")
 
-vim.cmd("qa!")
+  local lines = t.read_lines(log)
+  fw.eq(#lines, 1, "should make one prompt attempt")
+end)

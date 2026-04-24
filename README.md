@@ -42,6 +42,20 @@ Inside the prompt window:
 - `<C-d>` submits in insert and normal mode
 - `<Esc>` cancels in normal mode
 
+## Tests
+
+Run the headless Neovim test suite:
+
+```bash
+./tests/run.sh
+```
+
+Test output is colored by default. Disable ANSI colors with:
+
+```bash
+NO_COLOR=1 ./tests/run.sh
+```
+
 ## Notes
 
 - Nine keeps `pi` read-only for this workflow.
