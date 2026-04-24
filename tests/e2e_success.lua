@@ -16,6 +16,7 @@ fw.test("inserts text and supports single undo", function()
   local bufnr = t.set_buffer({ "abc" }, { 1, 1 })
   t.open_nine()
   t.submit_prompt("insert something here")
+  fw.eq(vim.api.nvim_get_mode().mode, "n", "submitting from the prompt should leave insert mode")
 
   t.wait_until(function()
     return table.concat(t.current_lines(bufnr), "\n") == "aHELLObc"
