@@ -20,7 +20,7 @@ Nine supports two workflows:
 
 ## Default config
 
-It is not required to call setup, but if you want to modify the otions, this setup is equivalent to the default
+It is not required to call setup, but if you want to modify the options, these are the defaults:
 
 ```lua
 require("nine").setup({
@@ -41,6 +41,13 @@ For visual replacement, select text and run:
 
 ```vim
 :'<,'>Nine
+```
+
+Example Lua keymaps:
+
+```lua
+vim.keymap.set("n", "<leader>nn", "<cmd>Nine<cr>", { desc = "nine insert" })
+vim.keymap.set("x", "<leader>nn", ":Nine<cr>", { desc = "nine rewrite selection" })
 ```
 
 Inside the prompt window:

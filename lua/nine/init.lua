@@ -13,7 +13,6 @@ local defaults = {
   cwd = nil,
   auto_start = true,
   on_event = nil,
-  on_stdout = nil,
   on_stderr = nil,
   on_exit = nil,
 }
