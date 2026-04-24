@@ -130,6 +130,17 @@ local function parse_response(run, raw)
   return format.parse_insert_response(raw)
 end
 
+local function discard_request(request)
+  if not request then
+    return
+  end
+  if request.kind == "replace" then
+    replace.discard(request)
+  else
+    insert.discard(request)
+  end
+end
+
 local function apply_response(run, decoded)
   local ok, err
   if run.request.kind == "replace" then
@@ -185,29 +196,27 @@ function M.run(client, opts)
       return
     end
     prepared_request = request
+  else
+    prepared_request = context.capture()
   end
 
   state.active = true
   prompt.open({
     on_cancel = function()
       prompt.close()
-      if prepared_request and prepared_request.kind == "replace" then
-        replace.discard(prepared_request)
-      end
+      discard_request(prepared_request)
       state.active = false
       state.run = nil
     end,
     on_submit = function(text)
       if not text or text:match("^%s*$") then
-        if prepared_request and prepared_request.kind == "replace" then
-          replace.discard(prepared_request)
-        end
+        discard_request(prepared_request)
         state.active = false
         vim.notify("nine prompt was empty", vim.log.levels.WARN, { title = "nine" })
         return
       end
 
-      local request = prepared_request or context.capture()
+      local request = prepared_request
       state.run = {
         request = request,
         current_message_chunks = nil,

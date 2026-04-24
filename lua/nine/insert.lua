@@ -33,6 +33,12 @@ local function resolve_position(request)
   return row, col
 end
 
+local function cleanup_mark(request)
+  if request.mark_namespace and request.mark_id and vim.api.nvim_buf_is_valid(request.bufnr) then
+    pcall(vim.api.nvim_buf_del_extmark, request.bufnr, request.mark_namespace, request.mark_id)
+  end
+end
+
 function M.apply(request, insert_text)
   local row, col, err = resolve_position(request)
   if not row then
@@ -42,12 +48,13 @@ function M.apply(request, insert_text)
   local lines = split_lines(insert_text)
   vim.api.nvim_buf_set_text(request.bufnr, row, col, row, col, lines)
 
-  if request.mark_namespace and request.mark_id and vim.api.nvim_buf_is_valid(request.bufnr) then
-    vim.api.nvim_buf_del_extmark(request.bufnr, request.mark_namespace, request.mark_id)
-  end
-
+  cleanup_mark(request)
 
   return true
+end
+
+function M.discard(request)
+  cleanup_mark(request)
 end
 
 return M

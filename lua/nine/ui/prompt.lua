@@ -72,10 +72,12 @@ function M.open(opts)
     local lines = vim.api.nvim_buf_get_lines(state.buf, 0, -1, false)
     local text = table.concat(lines, "\n")
     pcall(vim.cmd, "stopinsert")
-    close()
-    if opts.on_submit then
-      opts.on_submit(text)
-    end
+    vim.schedule(function()
+      close()
+      if opts.on_submit then
+        opts.on_submit(text)
+      end
+    end)
   end
 
   local function cancel()

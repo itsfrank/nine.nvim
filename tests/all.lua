@@ -13,6 +13,7 @@ local test_files = {
   "e2e_visual_linewise",
   "e2e_visual_cursor_shift",
   "e2e_visual_retry",
+  "e2e_prompt_submit",
 }
 
 for _, file in ipairs(test_files) do
