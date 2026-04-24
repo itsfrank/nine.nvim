@@ -67,28 +67,37 @@ rl.on('line', (line) => {
   appendLog(command.message || '');
   const text = responseForPrompt();
 
-  send({
-    id: command.id,
-    type: 'response',
-    command: 'prompt',
-    success: true,
-  });
+  const emitResponse = () => {
+    send({
+      id: command.id,
+      type: 'response',
+      command: 'prompt',
+      success: true,
+    });
 
-  send({
-    type: 'message_start',
-    message: { role: 'assistant', content: [] },
-  });
-  send({
-    type: 'message_update',
-    message: { role: 'assistant', content: [] },
-    assistantMessageEvent: { type: 'text_delta', delta: text },
-  });
-  send({
-    type: 'message_end',
-    message: { role: 'assistant', content: [] },
-  });
-  send({
-    type: 'agent_end',
-    messages: [],
-  });
+    send({
+      type: 'message_start',
+      message: { role: 'assistant', content: [] },
+    });
+    send({
+      type: 'message_update',
+      message: { role: 'assistant', content: [] },
+      assistantMessageEvent: { type: 'text_delta', delta: text },
+    });
+    send({
+      type: 'message_end',
+      message: { role: 'assistant', content: [] },
+    });
+    send({
+      type: 'agent_end',
+      messages: [],
+    });
+  };
+
+  if (scenario === 'delayed-success') {
+    setTimeout(emitResponse, 150);
+    return;
+  }
+
+  emitResponse();
 });

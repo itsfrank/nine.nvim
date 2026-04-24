@@ -13,5 +13,6 @@ run_test() {
 run_test tests/e2e_success.lua
 run_test tests/e2e_retry.lua
 run_test tests/e2e_fail_three.lua
+run_test tests/e2e_cursor_shift.lua
 
 echo "All tests passed"
