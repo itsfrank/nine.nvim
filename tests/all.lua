@@ -9,6 +9,10 @@ local test_files = {
   "e2e_fail_three",
   "e2e_cursor_shift",
   "e2e_cursor_position",
+  "e2e_visual_replace",
+  "e2e_visual_linewise",
+  "e2e_visual_cursor_shift",
+  "e2e_visual_retry",
 }
 
 for _, file in ipairs(test_files) do

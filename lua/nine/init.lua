@@ -33,8 +33,8 @@ function M.setup(opts)
   return M
 end
 
-function M.open()
-  flow.run(get_client())
+function M.open(opts)
+  flow.run(get_client(), opts or {})
 end
 
 return M

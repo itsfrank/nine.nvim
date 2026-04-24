@@ -51,6 +51,15 @@ function M.open_nine()
   end, 1000, "prompt window did not open")
 end
 
+function M.open_nine_range(start_pos, end_pos)
+  vim.fn.setpos("'<", { 0, start_pos[1], start_pos[2], 0 })
+  vim.fn.setpos("'>", { 0, end_pos[1], end_pos[2], 0 })
+  vim.cmd(string.format("%d,%dNine", start_pos[1], end_pos[1]))
+  M.wait_until(function()
+    return vim.bo.buftype == "nofile"
+  end, 1000, "prompt window did not open")
+end
+
 function M.submit_prompt(text)
   vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(text, "\n", { plain = true, trimempty = false }))
   vim.api.nvim_feedkeys(termcodes("<C-d>"), "xt", false)

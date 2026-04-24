@@ -1,6 +1,7 @@
 local context = require("nine.context")
 local format = require("nine.format")
 local insert = require("nine.insert")
+local replace = require("nine.replace")
 local prompt = require("nine.ui.prompt")
 local spinner = require("nine.ui.spinner")
 
@@ -107,31 +108,56 @@ local function send_attempt(client, text, callback)
   end
 end
 
+local function build_attempt_prompt(run, user_prompt, attempt)
+  local is_replace = run.request.kind == "replace"
+  if attempt == 1 then
+    spinner.update("nine thinking")
+    if is_replace then
+      return format.build_replace_prompt(run.request, user_prompt)
+    end
+    return format.build_insert_prompt(run.request, user_prompt)
+  end
+
+  spinner.update(string.format("nine repairing output (%d/3)", attempt))
+  local shape = is_replace and '{"replacement_text":"..."}' or '{"insert_text":"..."}'
+  return format.build_repair_prompt(run.last_raw or "", run.last_error or "unknown error", shape)
+end
+
+local function parse_response(run, raw)
+  if run.request.kind == "replace" then
+    return format.parse_replace_response(raw)
+  end
+  return format.parse_insert_response(raw)
+end
+
+local function apply_response(run, decoded)
+  local ok, err
+  if run.request.kind == "replace" then
+    ok, err = replace.apply(run.request, decoded.replacement_text)
+    return ok, err or "Replaced with nine"
+  end
+  ok, err = insert.apply(run.request, decoded.insert_text)
+  return ok, err or "Inserted with nine"
+end
+
 local function process_attempt(client, user_prompt, attempt)
   local run = state.run
   if not run then
     return
   end
 
-  local prompt_text
-  if attempt == 1 then
-    spinner.update("nine thinking")
-    prompt_text = format.build_insert_prompt(run.request, user_prompt)
-  else
-    spinner.update(string.format("nine repairing output (%d/3)", attempt))
-    prompt_text = format.build_repair_prompt(run.last_raw or "", run.last_error or "unknown error")
-  end
+  local prompt_text = build_attempt_prompt(run, user_prompt, attempt)
 
   send_attempt(client, prompt_text, function(raw)
     run.last_raw = raw
-    local decoded, parse_err = format.parse_insert_response(raw)
+    local decoded, parse_err = parse_response(run, raw)
     if decoded then
-      local ok, err = insert.apply(run.request, decoded.insert_text)
+      local ok, message_or_err = apply_response(run, decoded)
       if not ok then
-        complete_failure(err)
+        complete_failure(message_or_err)
         return
       end
-      complete_success("Inserted with nine")
+      complete_success(message_or_err)
       return
     end
 
@@ -145,27 +171,43 @@ local function process_attempt(client, user_prompt, attempt)
   end)
 end
 
-function M.run(client)
+function M.run(client, opts)
   if state.active then
     vim.notify("nine is already running", vim.log.levels.WARN, { title = "nine" })
     return
+  end
+
+  local prepared_request = nil
+  if opts and opts.range and opts.range > 0 then
+    local request, err = context.capture_selection(opts)
+    if not request then
+      vim.notify(err or "failed to capture visual selection", vim.log.levels.ERROR, { title = "nine" })
+      return
+    end
+    prepared_request = request
   end
 
   state.active = true
   prompt.open({
     on_cancel = function()
       prompt.close()
+      if prepared_request and prepared_request.kind == "replace" then
+        replace.discard(prepared_request)
+      end
       state.active = false
       state.run = nil
     end,
     on_submit = function(text)
       if not text or text:match("^%s*$") then
+        if prepared_request and prepared_request.kind == "replace" then
+          replace.discard(prepared_request)
+        end
         state.active = false
         vim.notify("nine prompt was empty", vim.log.levels.WARN, { title = "nine" })
         return
       end
 
-      local request = context.capture()
+      local request = prepared_request or context.capture()
       state.run = {
         request = request,
         current_message_chunks = nil,

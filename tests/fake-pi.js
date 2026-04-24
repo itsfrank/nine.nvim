@@ -23,6 +23,19 @@ function responseForPrompt() {
     return '{"insert_text":"HELLO"}';
   }
 
+  if (scenario === 'visual-success' || scenario === 'visual-delayed-success') {
+    return '{"replacement_text":"nine"}';
+  }
+
+  if (scenario === 'visual-linewise') {
+    return '{"replacement_text":"new one\\nnew two"}';
+  }
+
+  if (scenario === 'visual-retry-once') {
+    if (promptCount === 1) return 'not json';
+    return '{"replacement_text":"nine"}';
+  }
+
   if (scenario === 'retry-once') {
     if (promptCount === 1) return 'not json';
     return '{"insert_text":"HELLO"}';
@@ -94,7 +107,7 @@ rl.on('line', (line) => {
     });
   };
 
-  if (scenario === 'delayed-success') {
+  if (scenario === 'delayed-success' || scenario === 'visual-delayed-success') {
     setTimeout(emitResponse, 150);
     return;
   }
