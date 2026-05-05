@@ -8,8 +8,11 @@ local state = {
 }
 
 local defaults = {
+  agent = "pi",
   pi_cmd = "pi",
   pi_args = { "--mode", "rpc", "--no-session", "--tools", "read,grep,find,ls" },
+  opencode_host = "localhost",
+  opencode_port = 63636,
   cwd = nil,
   auto_start = true,
   on_event = nil,
@@ -25,7 +28,12 @@ local function get_client()
 end
 
 function M.setup(opts)
-  defaults = vim.tbl_deep_extend("force", {}, defaults, opts or {})
+  opts = opts or {}
+  local new_defaults = vim.tbl_deep_extend("force", {}, defaults, opts)
+  if state.client and state.client.opts and state.client.opts.agent ~= new_defaults.agent then
+    state.client = nil
+  end
+  defaults = new_defaults
   if state.client then
     state.client:configure(defaults)
   end

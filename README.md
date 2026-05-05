@@ -15,8 +15,10 @@ Nine supports two workflows:
 
 ## Requirements
 
-- `pi` must be installed and available on `$PATH`
-- Neovim with Lua support
+- `pi` must be installed and available on `$PATH` (when using `agent = "pi"`)
+- Neovim 0.12+ with Lua support (0.12 required for `agent = "opencode"` via `vim.net`)
+
+`opencode` mode talks to an opencode HTTP server. Set `opencode_host` and `opencode_port` to match your running server.
 
 ## Default config
 
@@ -24,8 +26,11 @@ It is not required to call setup, but if you want to modify the options, these a
 
 ```lua
 require("nine").setup({
+  agent = "pi", -- "pi" or "opencode"
   pi_cmd = "pi",
   pi_args = { "--mode", "rpc", "--no-session", "--tools", "read,grep,find,ls" },
+  opencode_host = "localhost",
+  opencode_port = 63636,
 })
 ```
 
